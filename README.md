@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/32672640/README.md)
 # 需要と供給のグラフ
 
 公共・政治経済の授業で使う、需要曲線・供給曲線のアニメーション教材です。
