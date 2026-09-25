@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="問題に答えると需要曲線・供給曲線が動く、公共・政治経済の授業用アプリ">
+<title>需要と供給のグラフ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Dela+Gothic+One&display=swap">
+<style>
+:root{
+  --bg:#f3f6f4; --paper:#fbfdfc; --ink:#1c2a2d; --muted:#56686b; --line:#cfdcd8; --grid:#e1ebe7;
+  --demand:#1d67a8; --supply:#c84b17; --eq:#1c2a2d; --ghost:#94a9ab;
+  --btn:#e7efec; --btn-h:#dbe7e3; --focus:#1d67a8;
+  --ok:#2d7a4a; --ok-bg:#e3f1e8; --ng:#b3412a; --ng-bg:#f8e6e1;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10181a; --paper:#162124; --ink:#e4eeeb; --muted:#9db0b1; --line:#2b3d40; --grid:#1f2e31;
+    --demand:#63aee8; --supply:#f08957; --eq:#e4eeeb; --ghost:#5d7477;
+    --btn:#1f2e31; --btn-h:#283b3e; --focus:#63aee8;
+    --ok:#6fcf93; --ok-bg:#183326; --ng:#f0937c; --ng-bg:#3a1f19;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10181a; --paper:#162124; --ink:#e4eeeb; --muted:#9db0b1; --line:#2b3d40; --grid:#1f2e31;
+  --demand:#63aee8; --supply:#f08957; --eq:#e4eeeb; --ghost:#5d7477;
+  --btn:#1f2e31; --btn-h:#283b3e; --focus:#63aee8;
+  --ok:#6fcf93; --ok-bg:#183326; --ng:#f0937c; --ng-bg:#3a1f19;
+}
+/* 文字の大きさ：教室用（標準）と小さめ。rem で全体が一緒に変わる */
+html{font-size:20px}
+html.small{font-size:16px}
+@media (max-width:600px){ html{font-size:16px} }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;font-size:1rem;line-height:1.7;padding:0 16px}
+.wrap{max-width:1500px;margin:0 auto;padding-block:.8rem 1.6rem;display:grid;gap:.8rem}
+button{font:inherit;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:.45rem;padding:.4rem .8rem;cursor:pointer}
+button:hover:not(:disabled){background:var(--btn-h)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+button.primary:hover:not(:disabled){background:var(--ink);opacity:.88}
+.eyebrow{font-size:.65rem;letter-spacing:.12em;color:var(--muted);font-weight:700}
+
+/* ---- トップページ ---- */
+#home{display:grid;gap:1.2rem;padding-block:1rem;max-width:1100px;margin:0 auto;width:100%}
+#home h1{font-family:"Dela Gothic One","BIZ UDPGothic",sans-serif;font-weight:400;font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.25;margin:0;letter-spacing:.02em}
+#home .lead{margin:.3rem 0 0;color:var(--muted);max-width:40ch}
+.chapters{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.6rem}
+.chapters button{text-align:left;display:grid;grid-template-columns:auto 1fr auto;gap:.2rem .7rem;align-items:start;padding:.8rem 1rem;background:var(--paper)}
+.chapters .num{font-family:"Dela Gothic One","BIZ UDPGothic",sans-serif;font-size:1.3rem;line-height:1.2;color:var(--muted);grid-row:span 2}
+.chapters .t{font-weight:700;font-size:1.05rem}
+.chapters .d{grid-column:2;font-size:.7rem;color:var(--muted);line-height:1.5}
+.chapters .ck{color:var(--ok);font-weight:700;grid-row:span 2}
+.start{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.start .primary{font-size:1.1rem;padding:.6rem 1.4rem}
+.howto{font-size:.7rem;color:var(--muted);border-top:1px solid var(--line);padding-top:.8rem;line-height:1.8}
+.howto kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:.25rem;padding:0 .3rem;background:var(--paper);color:var(--ink)}
+
+/* ---- 授業画面 ---- */
+.topbar{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
+.topbar .home{font-weight:700}
+nav{display:flex;flex-wrap:wrap;gap:.3rem;flex:1}
+nav button{font-size:.7rem;padding:.25rem .6rem;display:flex;gap:.3rem;align-items:center}
+nav button .n{font-variant-numeric:tabular-nums;color:var(--muted)}
+nav button[aria-current="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+nav button[aria-current="true"] .n{color:inherit;opacity:.7}
+nav .done{color:var(--ok);font-weight:700}
+nav button[aria-current="true"] .done{color:inherit}
+.size{font-size:.7rem;padding:.25rem .6rem}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.board{background:var(--paper);border:1px solid var(--line);border-radius:.5rem;padding:.5rem}
+svg{display:block;width:100%;height:auto;max-height:calc(100vh - 11.5rem)}
+svg text{font-family:"BIZ UDPGothic",sans-serif}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;padding:.1rem .4rem}
+.readout div{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .6rem}
+.readout small{color:var(--muted);font-size:.65rem;letter-spacing:.06em;width:100%}
+.readout b{font-size:1.5rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.readout .delta{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.panel{display:grid;gap:.7rem}
+.panel h2{font-size:1.3rem;margin:0;line-height:1.35}
+.intro{margin:.2rem 0 0;font-size:.85rem;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:.5rem;padding:.8rem;display:grid;gap:.6rem}
+.qtext{margin:0;font-size:1.1rem;font-weight:700;line-height:1.6}
+.choices{display:grid;gap:.4rem}
+.choices button{text-align:left;padding:.5rem .8rem;display:flex;gap:.6rem;align-items:baseline}
+.choices .k{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.choices button.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:700}
+.choices button.ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng)}
+.choices button.ok .k,.choices button.ng .k{color:inherit}
+.choices button:disabled{cursor:default}
+.choices button:disabled:not(.ok):not(.ng){opacity:.5}
+.fb{border-top:1px solid var(--line);padding-top:.5rem}
+.fb .verdict{font-weight:700;font-size:1.05rem}
+.fb .verdict.ok{color:var(--ok)} .fb .verdict.ng{color:var(--ng)}
+.fb p{margin:.1rem 0 0;font-size:.9rem}
+.row{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end;margin-top:.5rem}
+.score{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.slider{display:grid;gap:.1rem}
+.slider label{display:flex;justify-content:space-between;font-size:.8rem;gap:.4rem;flex-wrap:wrap}
+.slider label span{color:var(--muted);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:1.4rem}
+#sD{accent-color:var(--demand)} #sS{accent-color:var(--supply)} #pr{accent-color:var(--ink)}
+.toggle{display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer}
+.toggle input{width:1rem;height:1rem;accent-color:var(--ink)}
+footer{color:var(--muted);font-size:.6rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- トップページ -->
+  <section id="home">
+    <div>
+      <h1>需要と供給のグラフ</h1>
+      <p class="lead">問題に答えると、グラフが動きます。1章から順に進めても、好きな章から始めてもOK。</p>
+    </div>
+    <div class="start">
+      <button class="primary" id="startBtn">1章からはじめる</button>
+      <button id="freeBtn">自由実験</button>
+    </div>
+    <div class="chapters" id="chapters"></div>
+    <div class="howto">
+      先生向け：キーボードでも操作できます。<kbd>1</kbd>〜<kbd>4</kbd> 選択肢を選ぶ ／ <kbd>→</kbd> 次へ ／ <kbd>R</kbd> 動きをもう一度 ／ <kbd>Esc</kbd> トップへ。プレゼン用リモコンの「次へ」ボタンでも進められます。
+    </div>
+  </section>
+
+  <!-- 授業画面 -->
+  <section id="lesson" hidden>
+    <div class="topbar">
+      <button class="home" id="homeBtn">← トップ</button>
+      <nav id="tabs" aria-label="章"></nav>
+      <button class="size" id="sizeBtn">文字を小さく</button>
+    </div>
+    <div class="main" style="margin-top:.6rem">
+      <div class="board">
+        <svg id="g" viewBox="0 0 600 460" role="img" aria-label="需要曲線と供給曲線のグラフ">
+          <defs>
+            <clipPath id="plot"><rect x="78" y="30" width="492" height="366"/></clipPath>
+            <marker id="arD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--demand)"/></marker>
+            <marker id="arS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--supply)"/></marker>
+          </defs>
+          <g id="grid"></g>
+          <g clip-path="url(#plot)">
+            <line id="gD" stroke="var(--ghost)" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>
+            <line id="gS" stroke="var(--ghost)" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>
+            <g id="priceLayer">
+              <line id="pLine" stroke="var(--ink)" stroke-width="2" stroke-dasharray="2 5" fill="none"/>
+              <line id="gap" stroke-width="10" stroke-linecap="round" opacity=".35" fill="none"/>
+            </g>
+            <line id="lD" stroke="var(--demand)" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <line id="lS" stroke="var(--supply)" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <line id="arrD" stroke="var(--demand)" stroke-width="3" marker-end="url(#arD)" fill="none"/>
+            <line id="arrS" stroke="var(--supply)" stroke-width="3" marker-end="url(#arS)" fill="none"/>
+            <polyline id="guide0" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="5 5" fill="none"/>
+            <polyline id="guide" stroke="var(--eq)" stroke-width="1.5" stroke-dasharray="5 5" fill="none"/>
+            <polyline id="mGuide" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>
+          </g>
+          <g id="axes"></g>
+          <circle id="e0" r="6" fill="var(--paper)" stroke="var(--ghost)" stroke-width="2.5"/>
+          <text id="e0t" font-size="17" fill="var(--muted)">E₀</text>
+          <circle id="e1" r="8" fill="var(--eq)"/>
+          <text id="e1t" font-size="20" font-weight="700" fill="var(--eq)">E</text>
+          <text id="tD" font-size="24" font-weight="700" fill="var(--demand)">D 需要</text>
+          <text id="tS" font-size="24" font-weight="700" fill="var(--supply)">S 供給</text>
+          <text id="gapT" font-size="17" font-weight="700" text-anchor="middle"></text>
+          <circle id="pD" r="6" fill="var(--demand)"/>
+          <circle id="pS" r="6" fill="var(--supply)"/>
+          <circle id="mk" r="9" stroke="var(--paper)" stroke-width="2.5"/>
+          <text id="mkT" font-size="19" font-weight="700" fill="var(--ink)"></text>
+        </svg>
+        <div class="readout" id="readout">
+          <div><small>均衡価格</small><b id="rP">？</b><span class="delta" id="dP"></span></div>
+          <div><small>均衡数量（取引量）</small><b id="rQ">？</b><span class="delta" id="dQ"></span></div>
+        </div>
+      </div>
+      <div class="panel" id="panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <footer>公共・政治経済の授業用教材。グラフの数値は説明用のモデルで、実際のデータではありません。問題は lesson.js で増やせます。</footer>
+</div>
+
+<script src="lesson.js"></script>
+<script>
+(() => {
+  /* ---------- グラフの計算 ----------
+     内部の目盛り：数量 Q 0〜100、価格 P 0〜100。表示は 価格×2=円、数量×10=個 */
+  const X0=78, X1=570, Y0=30, Y1=396;
+  const x = q => X0 + (X1-X0)*q/100;
+  const y = p => Y1 - (Y1-Y0)*p/100;
+  const yen = p => Math.round(p*2);
+  const ko = q => Math.round(q*10);
+  const Pd = (q,s) => 90 - 0.8*(q - s);
+  const Ps = (q,s) => 10 + 0.8*(q - s);
+  const Qd = (p,s) => s + (90 - p)/0.8;
+  const Qs = (p,s) => s + (p - 10)/0.8;
+  const eq = (sD,sS) => { const q = 50 + 0.5*(sD+sS); return {q, p: Pd(q,sD)}; };
+  const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+
+  // アニメの速さ（ミリ秒）。教室で見やすいよう、ゆっくりめ
+  const SPEED = { shift:2000, along:1800, market:2800 };
+
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent, text) => { const e=document.createElementNS(NS,tag); for (const k in attrs) e.setAttribute(k,attrs[k]); if (text!=null) e.textContent=text; parent.appendChild(e); return e; };
+  const setLine = (el,q1,p1,q2,p2) => { el.setAttribute('x1',x(q1)); el.setAttribute('y1',y(p1)); el.setAttribute('x2',x(q2)); el.setAttribute('y2',y(p2)); };
+  const hide = (el,h) => { el.style.display = h ? 'none' : ''; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // 目盛り
+  (() => {
+    const grid=$('grid'), axes=$('axes');
+    for (let i=0;i<=100;i+=12.5){
+      mk('line',{x1:x(i),x2:x(i),y1:Y0,y2:Y1,stroke:'var(--grid)','stroke-width':1},grid);
+      mk('line',{x1:X0,x2:X1,y1:y(i),y2:y(i),stroke:'var(--grid)','stroke-width':1},grid);
+    }
+    for (let i=0;i<=100;i+=25){
+      mk('text',{x:X0-10,y:y(i)+6,'text-anchor':'end','font-size':16,fill:'var(--muted)'},axes,yen(i));
+      mk('text',{x:x(i),y:Y1+24,'text-anchor':'middle','font-size':16,fill:'var(--muted)'},axes,ko(i));
+    }
+    mk('line',{x1:X0,x2:X0,y1:Y0-8,y2:Y1,stroke:'var(--ink)','stroke-width':2},axes);
+    mk('line',{x1:X0,x2:X1+8,y1:Y1,y2:Y1,stroke:'var(--ink)','stroke-width':2},axes);
+    mk('text',{x:X0+10,y:Y0-10,'text-anchor':'start','font-size':17,'font-weight':700,fill:'var(--ink)'},axes,'価格（円）');
+    mk('text',{x:X1,y:Y1+52,'text-anchor':'end','font-size':17,'font-weight':700,fill:'var(--ink)'},axes,'数量（個）');
+  })();
+
+  /* ---------- グラフの状態 ---------- */
+  const st = { sD:0, sS:0, show:{D:true,S:true}, showE:true, reveal:false, price:null, marker:null };
+
+  function change(d, unit){
+    if (Math.abs(d) < 1) return '変わらない';
+    const up = unit==='円' ? '上がる' : '増える', down = unit==='円' ? '下がる' : '減る';
+    return (d>0 ? '↑' : '↓') + Math.abs(d) + unit + (d>0 ? up : down);
+  }
+
+  function draw(){
+    const {sD,sS,show} = st;
+    const moved = Math.abs(sD)>0.3 || Math.abs(sS)>0.3;
+    setLine($('lD'),-60,Pd(-60,sD),160,Pd(160,sD)); hide($('lD'),!show.D); hide($('tD'),!show.D);
+    setLine($('lS'),-60,Ps(-60,sS),160,Ps(160,sS)); hide($('lS'),!show.S); hide($('tS'),!show.S);
+    setLine($('gD'),-60,Pd(-60,0),160,Pd(160,0)); hide($('gD'),!show.D || Math.abs(sD)<=0.3);
+    setLine($('gS'),-60,Ps(-60,0),160,Ps(160,0)); hide($('gS'),!show.S || Math.abs(sS)<=0.3);
+
+    const aD=$('arrD'), aS=$('arrS');
+    if (show.D && Math.abs(sD)>3){ const p = sD>0 ? 76 : 34; setLine(aD, Qd(p,0)+Math.sign(sD)*2, p, Qd(p,sD)-Math.sign(sD)*3, p); hide(aD,false); } else hide(aD,true);
+    if (show.S && Math.abs(sS)>3){ const p = sS<0 ? 84 : 36; setLine(aS, Qs(p,0)+Math.sign(sS)*2, p, Qs(p,sS)-Math.sign(sS)*3, p); hide(aS,false); } else hide(aS,true);
+
+    const qd = clamp(Qd(12,sD),6,82); $('tD').setAttribute('x',x(qd)+12); $('tD').setAttribute('y',y(Pd(qd,sD))+28);
+    const qs = clamp(Qs(92,sS),6,90); $('tS').setAttribute('text-anchor','end'); $('tS').setAttribute('x',x(qs)-16); $('tS').setAttribute('y',y(Ps(qs,sS))-8);
+
+    // 均衡点
+    const both = show.D && show.S, E = eq(sD,sS), E0 = eq(0,0);
+    const showE = both && st.showE;
+    ['e1','e1t','guide'].forEach(id => hide($(id), !showE));
+    const showE0 = showE && moved;
+    ['e0','e0t','guide0'].forEach(id => hide($(id), !showE0));
+    $('e1').setAttribute('cx',x(E.q)); $('e1').setAttribute('cy',y(E.p));
+    $('e1t').setAttribute('x',x(E.q)+12); $('e1t').setAttribute('y',y(E.p)-12);
+    $('e1t').textContent = moved ? 'E₁' : 'E';
+    $('guide').setAttribute('points',`${X0},${y(E.p)} ${x(E.q)},${y(E.p)} ${x(E.q)},${Y1}`);
+    $('guide0').setAttribute('points',`${X0},${y(E0.p)} ${x(E0.q)},${y(E0.p)} ${x(E0.q)},${Y1}`);
+    $('e0').setAttribute('cx',x(E0.q)); $('e0').setAttribute('cy',y(E0.p));
+    $('e0t').setAttribute('x',x(E0.q)-30); $('e0t').setAttribute('y',y(E0.p)+22);
+
+    // 数字の表示
+    $('readout').style.visibility = both ? 'visible' : 'hidden';
+    if (both && st.reveal){
+      $('rP').textContent = yen(E.p)+'円'; $('rQ').textContent = ko(E.q)+'個';
+      $('dP').textContent = moved ? '（もとは100円）' + change(yen(E.p)-yen(E0.p),'円') : '';
+      $('dQ').textContent = moved ? '（もとは500個）' + change(ko(E.q)-ko(E0.q),'個') : '';
+    } else {
+      $('rP').textContent='？'; $('rQ').textContent='？'; $('dP').textContent=''; $('dQ').textContent='';
+    }
+
+    // 価格を固定した線
+    const pm = st.price!=null && both;
+    hide($('priceLayer'),!pm); ['pD','pS','gapT'].forEach(id => hide($(id),!pm));
+    if (pm){
+      const P=st.price, a=Qd(P,sD), b=Qs(P,sS);
+      setLine($('pLine'),0,P,100,P);
+      $('pD').setAttribute('cx',x(a)); $('pD').setAttribute('cy',y(P));
+      $('pS').setAttribute('cx',x(b)); $('pS').setAttribute('cy',y(P));
+      setLine($('gap'),a,P,b,P);
+      const diff = ko(b)-ko(a), gt=$('gapT'), even = Math.abs(diff) < 10;
+      gt.setAttribute('text-anchor', even ? 'start' : 'middle');
+      gt.setAttribute('x', even ? x(E.q)+40 : clamp(x((a+b)/2), X0+130, X1-130));
+      gt.setAttribute('y', even ? y(P)-12 : y(P) + (P>E.p ? -16 : 30));
+      let col, txt;
+      if (even){ col='var(--ink)'; txt=`${yen(P)}円：ぴったり（均衡）`; }
+      else if (diff>0){ col='var(--supply)'; txt=`${yen(P)}円：売れ残り ${diff}個（超過供給）`; }
+      else { col='var(--demand)'; txt=`${yen(P)}円：品不足 ${-diff}個（超過需要）`; }
+      $('gap').setAttribute('stroke',col); gt.setAttribute('fill',col); gt.textContent=txt;
+    }
+
+    // 曲線上の点
+    const m = st.marker, mEl=$('mk'), mT=$('mkT'), mG=$('mGuide');
+    const mOn = m && show[m.curve];
+    [mEl,mT,mG].forEach(el => hide(el,!mOn));
+    if (mOn){
+      const q = m.curve==='D' ? Qd(m.p,sD) : Qs(m.p,sS);
+      mEl.setAttribute('cx',x(q)); mEl.setAttribute('cy',y(m.p));
+      mEl.setAttribute('fill', m.curve==='D' ? 'var(--demand)' : 'var(--supply)');
+      mG.setAttribute('points',`${X0},${y(m.p)} ${x(q)},${y(m.p)} ${x(q)},${Y1}`);
+      const right = x(q) < 380;
+      mT.setAttribute('text-anchor', right ? 'start' : 'end');
+      mT.setAttribute('x', x(q) + (right ? 16 : -16)); mT.setAttribute('y', y(m.p) - 14);
+      mT.textContent = `${yen(m.p)}円・${ko(q)}個`;
+    }
+  }
+
+  /* ---------- アニメーション ---------- */
+  let anim = null;
+  const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+  function stop(){ if (anim){ cancelAnimationFrame(anim); anim=null; } }
+  function tween(from, to, dur, apply, done){
+    stop();
+    if (reduce || !dur){ apply(to); draw(); done && done(); return; }
+    const t0 = performance.now();
+    const step = now => {
+      const t = Math.min(1,(now-t0)/dur), k = ease(t), v = {};
+      for (const key in to) v[key] = from[key] + (to[key]-from[key])*k;
+      apply(v); draw();
+      if (t<1) anim = requestAnimationFrame(step); else { anim=null; done && done(); }
+    };
+    anim = requestAnimationFrame(step);
+  }
+
+  function runAct(act){
+    if (!act) return;
+    if (act.type==='shift'){
+      st.showE = true;
+      tween({sD:st.sD,sS:st.sS},{sD:act.sD||0,sS:act.sS||0},SPEED.shift,v=>{st.sD=v.sD;st.sS=v.sS;},
+        () => { if (act.reveal){ st.reveal=true; draw(); } });
+    }
+    else if (act.type==='along' && st.marker){ tween({p:st.marker.p},{p:act.to},SPEED.along,v=>{st.marker.p=v.p;}); }
+    else if (act.type==='market' && st.price!=null){ tween({p:st.price},{p:eq(st.sD,st.sS).p},SPEED.market,v=>{st.price=v.p;}); }
+    else if (act.type==='reveal'){ st.showE=true; st.reveal=true; draw(); }
+  }
+  const snap = () => JSON.parse(JSON.stringify(st));
+  const restore = s => Object.assign(st, JSON.parse(JSON.stringify(s)));
+
+  /* ---------- 画面の切りかえ ---------- */
+  const L = window.LESSON || [];
+  const FREE = L.length;             // 最後のタブ＝自由実験
+  const done = new Set();
+  let view = 'home', ci = 0, qi = 0, score = 0, answered = false, before = null, lastAct = null;
+  const panel = $('panel');
+
+  function goHome(){
+    stop(); view='home';
+    $('lesson').hidden = true; $('home').hidden = false;
+    renderHome(); window.scrollTo(0,0);
+  }
+
+  function renderHome(){
+    const box = $('chapters'); box.innerHTML = '';
+    L.forEach((ch,i) => {
+      const b = document.createElement('button');
+      b.innerHTML = `<span class="num">${i+1}</span><span class="t">${esc(ch.title)}</span>
+        <span class="ck">${done.has(i)?'✓':''}</span><span class="d">${esc(ch.intro)}</span>`;
+      b.addEventListener('click', () => openChapter(i));
+      box.appendChild(b);
+    });
+    const next = L.findIndex((_,i) => !done.has(i));
+    $('startBtn').textContent = done.size===0 ? '1章からはじめる' : next>=0 ? `${next+1}章から続ける` : 'もう一度1章から';
+    $('startBtn').onclick = () => openChapter(next>=0 && done.size>0 ? next : 0);
+  }
+  $('freeBtn').addEventListener('click', () => openChapter(FREE));
+  $('homeBtn').addEventListener('click', goHome);
+
+  // 文字サイズ
+  function setSize(small){
+    document.documentElement.classList.toggle('small', small);
+    $('sizeBtn').textContent = small ? '文字を大きく' : '文字を小さく';
+    try { localStorage.setItem('sd-small', small ? '1' : '0'); } catch(e){}
+  }
+  $('sizeBtn').addEventListener('click', () => setSize(!document.documentElement.classList.contains('small')));
+  try { if (localStorage.getItem('sd-small')==='1') setSize(true); } catch(e){}
+
+  function renderTabs(){
+    const nav = $('tabs'); nav.innerHTML = '';
+    [...L.map(c=>c.title), '自由実験'].forEach((t,i) => {
+      const b = document.createElement('button');
+      b.setAttribute('aria-current', i===ci ? 'true' : 'false');
+      b.innerHTML = (i<FREE ? `<span class="n">${i+1}</span>` : '') + esc(t) + (done.has(i) ? ' <span class="done">✓</span>' : '');
+      b.addEventListener('click', () => openChapter(i));
+      nav.appendChild(b);
+    });
+  }
+
+  function openChapter(i){
+    stop(); ci=i; qi=0; score=0; view='lesson';
+    $('home').hidden = true; $('lesson').hidden = false;
+    renderTabs(); window.scrollTo(0,0);
+    if (i===FREE) return openFree();
+    const ch = L[i];
+    st.show = {D:!!ch.show.D, S:!!ch.show.S};
+    st.showE = !!ch.show.E;
+    Object.assign(st,{sD:0,sS:0,reveal:false,price:null,marker:null});
+    showQuestion();
+  }
+
+  function applySetup(s){
+    if (!s) return;
+    if (s.reset){ Object.assign(st,{sD:0,sS:0,reveal:false,price:null,marker:null}); st.showE = !!L[ci].show.E; }
+    if (s.price!=null) st.price = s.price;
+    if (s.marker) st.marker = {curve:s.marker.curve, p:s.marker.p};
+  }
+
+  function head(){
+    const ch = L[ci];
+    return `<div><div class="eyebrow">第${ci+1}章</div><h2>${esc(ch.title)}</h2><p class="intro">${esc(ch.intro)}</p></div>`;
+  }
+
+  function showQuestion(){
+    stop();
+    const ch = L[ci], Q = ch.questions[qi];
+    answered = false; lastAct = null;
+    applySetup(Q.setup); draw();
+    panel.innerHTML = head() + `
+      <div class="card">
+        <div class="eyebrow">問 ${qi+1} / ${ch.questions.length}</div>
+        <p class="qtext">${esc(Q.q)}</p>
+        <div class="choices" id="choices"></div>
+        <div class="fb" id="fb" hidden></div>
+      </div>`;
+    const box = $('choices');
+    Q.choices.forEach((c,i) => {
+      const b = document.createElement('button');
+      b.dataset.v = c;
+      b.innerHTML = `<span class="k">${i+1}</span><span>${esc(c)}</span>`;
+      b.addEventListener('click', () => answer(b, c));
+      box.appendChild(b);
+    });
+  }
+
+  function answer(btn, choice){
+    if (answered) return; answered = true;
+    const ch = L[ci], Q = ch.questions[qi], right = choice===Q.a;
+    if (right) score++;
+    [...$('choices').children].forEach(b => { b.disabled = true; if (b.dataset.v===Q.a) b.classList.add('ok'); });
+    if (!right) btn.classList.add('ng');
+    const last = qi === ch.questions.length-1;
+    const canReplay = Q.act && Q.act.type!=='reveal';
+    const fb = $('fb'); fb.hidden = false;
+    fb.innerHTML = `<div class="verdict ${right?'ok':'ng'}">${right ? '正解！' : '残念、正解は「'+esc(Q.a)+'」'}</div>
+      <p>${esc(Q.explain||'')}</p>
+      <div class="row">${canReplay ? '<button id="replay">↻ 動きをもう一度</button>' : ''}<button class="primary" id="next">${last ? 'まとめへ' : '次の問題 →'}</button></div>`;
+    $('next').addEventListener('click', next);
+    if (canReplay) $('replay').addEventListener('click', replay);
+    $('next').focus({preventScroll:true});
+    before = snap(); lastAct = Q.act || null;
+    runAct(Q.act);
+  }
+
+  function replay(){
+    if (!lastAct || !before) return;
+    stop(); restore(before); draw();
+    setTimeout(() => runAct(lastAct), reduce ? 0 : 300);
+  }
+
+  function next(){
+    const ch = L[ci];
+    if (qi === ch.questions.length-1) showWrap(); else { qi++; showQuestion(); }
+  }
+
+  function showWrap(){
+    const ch = L[ci], n = ch.questions.length;
+    answered = false; lastAct = null;
+    done.add(ci); renderTabs();
+    panel.innerHTML = head() + `
+      <div class="card">
+        <div class="eyebrow">まとめ</div>
+        <div class="score">${n}問中 ${score}問 正解</div>
+        <p style="margin:0">${esc(ch.wrap||'')}</p>
+        <div class="row">
+          <button id="again">もう一度</button>
+          <button id="toHome">トップへ</button>
+          <button class="primary" id="go">${ci+1<FREE ? '次の章へ →' : '自由実験へ →'}</button>
+        </div>
+      </div>`;
+    $('again').addEventListener('click', () => openChapter(ci));
+    $('toHome').addEventListener('click', goHome);
+    $('go').addEventListener('click', () => openChapter(ci+1));
+    $('go').focus({preventScroll:true});
+  }
+
+  /* ---------- キーボード操作（先生用） ---------- */
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input')) return;
+    if (e.key==='Escape'){ goHome(); return; }
+    if (view!=='lesson' || ci===FREE) return;
+    const box = $('choices');
+    if (!answered && box && /^[1-9]$/.test(e.key)){
+      const b = box.children[+e.key-1]; if (b){ b.click(); e.preventDefault(); } return;
+    }
+    if (['ArrowRight','PageDown'].includes(e.key)){
+      const g = $('go'), n = $('next');
+      if (g) g.click(); else if (answered && n) n.click();
+      e.preventDefault(); return;
+    }
+    if ((e.key==='r' || e.key==='R') && answered) replay();
+  });
+
+  /* ---------- 自由実験 ---------- */
+  function openFree(){
+    Object.assign(st,{sD:0,sS:0,show:{D:true,S:true},showE:true,reveal:true,price:null,marker:null});
+    draw();
+    panel.innerHTML = `
+      <div><div class="eyebrow">おまけ</div><h2>自由実験</h2><p class="intro">曲線や価格を自由に動かして、何が起きるか確かめてみましょう。</p></div>
+      <div class="card">
+        <div class="slider"><label for="sD">需要曲線 <span id="vD"></span></label><input type="range" id="sD" min="-35" max="35" step="1" value="0"></div>
+        <div class="slider"><label for="sS">供給曲線 <span id="vS"></span></label><input type="range" id="sS" min="-35" max="35" step="1" value="0"></div>
+        <div class="row"><button id="reset">もとに戻す</button></div>
+      </div>
+      <div class="card">
+        <label class="toggle"><input type="checkbox" id="pm"> 価格を固定して、売れ残り・品不足を見る</label>
+        <div id="priceBox" hidden>
+          <div class="slider"><label for="pr">価格 <span id="vP"></span></label><input type="range" id="pr" min="10" max="95" step="1" value="75"></div>
+          <div class="row"><button class="primary" id="market">市場にまかせる</button></div>
+        </div>
+      </div>`;
+    const word = (v,k) => Math.abs(v)<0.5 ? 'そのまま' : (v>0 ? '右へ' : '左へ') + (k==='d' ? (v>0?'（需要が増える）':'（需要が減る）') : (v>0?'（供給が増える）':'（供給が減る）'));
+    const sync = () => {
+      $('sD').value=Math.round(st.sD); $('sS').value=Math.round(st.sS);
+      $('vD').textContent=word(st.sD,'d'); $('vS').textContent=word(st.sS,'s');
+      if (st.price!=null){ $('pr').value=Math.round(st.price); $('vP').textContent=yen(st.price)+'円'; }
+    };
+    const redraw = () => { draw(); sync(); };
+    $('sD').addEventListener('input', e => { stop(); st.sD=+e.target.value; redraw(); });
+    $('sS').addEventListener('input', e => { stop(); st.sS=+e.target.value; redraw(); });
+    $('reset').addEventListener('click', () => tween({sD:st.sD,sS:st.sS},{sD:0,sS:0},900,v=>{st.sD=v.sD;st.sS=v.sS;sync();}));
+    $('pm').addEventListener('change', e => { $('priceBox').hidden=!e.target.checked; st.price = e.target.checked ? 75 : null; redraw(); });
+    $('pr').addEventListener('input', e => { stop(); st.price=+e.target.value; redraw(); });
+    $('market').addEventListener('click', () => { if (st.price!=null) tween({p:st.price},{p:eq(st.sD,st.sS).p},SPEED.market,v=>{st.price=v.p;sync();}); });
+    sync();
+  }
+
+  goHome();
+})();
+</script>
+</body>
+</html>
