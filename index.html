@@ -63,6 +63,7 @@ button.primary:hover:not(:disabled){background:var(--ink);opacity:.88}
 .start a{text-decoration:none}
 .linkbtn{display:inline-block;font:inherit;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:.45rem;padding:.4rem .8rem}
 .linkbtn:hover{background:var(--btn-h)}
+.linkbtn.small{font-size:.7rem;padding:.25rem .6rem;text-decoration:none}
 .hintbox{background:var(--btn);border-radius:.4rem;padding:.4rem .6rem;font-size:.9rem}
 .howto{font-size:.7rem;color:var(--muted);border-top:1px solid var(--line);padding-top:.8rem;line-height:1.8}
 .howto kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:.25rem;padding:0 .3rem;background:var(--paper);color:var(--ink)}
@@ -84,6 +85,7 @@ nav button[aria-current="true"] .done{color:inherit}
 .board{background:var(--paper);border:1px solid var(--line);border-radius:.5rem;padding:.5rem}
 svg{display:block;width:100%;height:auto;max-height:calc(100vh - 11.5rem)}
 svg text{font-family:"BIZ UDPGothic",sans-serif}
+#g > text{paint-order:stroke;stroke:var(--paper);stroke-width:6px;stroke-linejoin:round}
 .readout{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;padding:.1rem .4rem}
 .readout div{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .6rem}
 .readout small{color:var(--muted);font-size:.65rem;letter-spacing:.06em;width:100%}
@@ -130,8 +132,11 @@ footer{color:var(--muted);font-size:.6rem}
     <div class="start">
       <button class="primary" id="startBtn">1章からはじめる</button>
       <button id="freeBtn">自由実験</button>
-      <a class="linkbtn" href="worksheet.html" target="_blank" rel="noopener">ワークシート（印刷用）</a>
+    </div>
+    <div class="start prints">
+      <span class="eyebrow">印刷して使う</span>
       <a class="linkbtn" href="jishu.html" target="_blank" rel="noopener">自習プリント（問題・解答・解説）</a>
+      <a class="linkbtn" href="worksheet.html" target="_blank" rel="noopener">授業用ワークシート</a>
     </div>
     <div class="chapters" id="chapters"></div>
     <div class="howto">
@@ -144,6 +149,8 @@ footer{color:var(--muted);font-size:.6rem}
     <div class="topbar">
       <button class="home" id="homeBtn">← トップ</button>
       <nav id="tabs" aria-label="章"></nav>
+      <a class="linkbtn small" href="worksheet.html" target="_blank" rel="noopener">ワークシート</a>
+      <a class="linkbtn small" href="jishu.html" target="_blank" rel="noopener">自習プリント</a>
       <button class="size" id="sizeBtn">文字を小さく</button>
     </div>
     <div class="main" style="margin-top:.6rem">
@@ -248,12 +255,42 @@ footer{color:var(--muted);font-size:.6rem}
 
   /* ---------- グラフの状態 ---------- */
   const st = { sD:0, sS:0, show:{D:true,S:true}, showE:true, reveal:false, price:null, marker:null, surplus:null, control:null };
-  const CLEAR = {sD:0,sS:0,reveal:false,price:null,marker:null,surplus:null,control:null};
+  const CLEAR = {sD:0,sS:0,reveal:true,price:null,marker:null,surplus:null,control:null};
 
   function change(d, unit){
     if (Math.abs(d) < 1) return '変わらない';
     const up = unit==='円' ? '上がる' : '増える', down = unit==='円' ? '下がる' : '減る';
     return (d>0 ? '↑' : '↓') + Math.abs(d) + unit + (d>0 ? up : down);
+  }
+
+  function placeLabels(sD, sS){
+    const lines = [q=>Pd(q,sD), q=>Ps(q,sS)];
+    if (Math.abs(sD)>0.3) lines.push(q=>Pd(q,0));
+    if (Math.abs(sS)>0.3) lines.push(q=>Ps(q,0));
+    const hitsLine = b => lines.some(f => { for (let q=-10;q<=110;q+=0.5){ const px=x(q), py=y(f(q)); if (px>b.x0-4 && px<b.x1+4 && py>b.y0-4 && py<b.y1+4) return true; } return false; });
+    const inside = b => b.x0>X0+4 && b.x1<X1+24 && b.y0>Y0 && b.y1<Y1-6;
+    const overlap = (a,b) => a && !(a.x1<b.x0-6 || b.x1<a.x0-6 || a.y1<b.y0-4 || b.y1<a.y0-4);
+    const W = 82, H = 22;
+    function put(el, f, qs, sides, avoid){
+      let first = null;
+      for (const q of qs) for (const side of sides){
+        const px = x(q), py = y(f(q)); let b;
+        if (side==='ur') b = {x0:px+10, y1:py-10};            // 右上
+        if (side==='dl') b = {x1:px-10, y0:py+12};            // 左下
+        if (side==='ul') b = {x1:px-10, y1:py-10};            // 左上
+        if (side==='dr') b = {x0:px+10, y0:py+12};            // 右下
+        if (b.x0===undefined) b.x0 = b.x1 - W; else b.x1 = b.x0 + W;
+        if (b.y0===undefined) b.y0 = b.y1 - H; else b.y1 = b.y0 + H;
+        if (!first) first = b;
+        if (inside(b) && !hitsLine(b) && !overlap(avoid,b)){ first = b; return set(el,b); }
+      }
+      return set(el, first);
+    }
+    function set(el, b){ el.setAttribute('text-anchor','start'); el.setAttribute('x', b.x0); el.setAttribute('y', b.y1-4); return b; }
+    const qsD = [86,78,70,62,54,46,38,30,22,14,8];
+    const qsS = [88,80,72,64,56,48,40,32,24,16,8];
+    const bD = st.show.D ? put($('tD'), q=>Pd(q,sD), qsD, sD<-0.3 ? ['dl','ur'] : ['ur','dl'], null) : null;
+    if (st.show.S) put($('tS'), q=>Ps(q,sS), qsS, sS>0.3 ? ['dr','ul'] : ['ul','dr'], bD);
   }
 
   function draw(){
@@ -268,8 +305,8 @@ footer{color:var(--muted);font-size:.6rem}
     if (show.D && !st.surplus && Math.abs(sD)>3){ const p = sD>0 ? 76 : 34; setLine(aD, Qd(p,0)+Math.sign(sD)*2, p, Qd(p,sD)-Math.sign(sD)*3, p); hide(aD,false); } else hide(aD,true);
     if (show.S && !st.surplus && Math.abs(sS)>3){ const p = sS<0 ? 84 : 36; setLine(aS, Qs(p,0)+Math.sign(sS)*2, p, Qs(p,sS)-Math.sign(sS)*3, p); hide(aS,false); } else hide(aS,true);
 
-    const qd = clamp(Qd(12,sD),6,82); $('tD').setAttribute('x',x(qd)+12); $('tD').setAttribute('y',y(Pd(qd,sD))+28);
-    const qs = clamp(Qs(92,sS),6,90); $('tS').setAttribute('text-anchor','end'); $('tS').setAttribute('x',x(qs)-16); $('tS').setAttribute('y',y(Ps(qs,sS))-8);
+    // 曲線ラベル：線・もとの位置の点線・もう一方のラベルに重ならない場所を探して置く
+    placeLabels(sD, sS);
 
     // 均衡点
     const both = show.D && show.S, E = eq(sD,sS), E0 = eq(0,0);
@@ -287,7 +324,7 @@ footer{color:var(--muted);font-size:.6rem}
 
     // 数字の表示
     $('readout').style.visibility = both ? 'visible' : 'hidden';
-    if (both && st.reveal){
+    if (both && st.showE && st.reveal){
       $('rP').textContent = yen(E.p)+'円'; $('rQ').textContent = ko(E.q)+'個';
       $('dP').textContent = moved ? '（もとは100円）' + change(yen(E.p)-yen(E0.p),'円') : '';
       $('dQ').textContent = moved ? '（もとは500個）' + change(ko(E.q)-ko(E0.q),'個') : '';
@@ -380,12 +417,13 @@ footer{color:var(--muted);font-size:.6rem}
     anim = requestAnimationFrame(step);
   }
 
-  function runAct(act){
+  function runAct(act, keepHidden){
     if (!act) return;
     if (act.type==='shift'){
-      st.showE = true;
+      st.showE = true; st.reveal = false;
+      // 動き終わったら数字を出す（次の問題が「価格と数量は？」なら、答えるまで隠しておく）
       tween({sD:st.sD,sS:st.sS},{sD:act.sD||0,sS:act.sS||0},SPEED.shift,v=>{st.sD=v.sD;st.sS=v.sS;},
-        () => { if (act.reveal){ st.reveal=true; draw(); } });
+        () => { if (!keepHidden || act.reveal){ st.reveal=true; draw(); } });
     }
     else if (act.type==='along' && st.marker){ tween({p:st.marker.p},{p:act.to},SPEED.along,v=>{st.marker.p=v.p;}); }
     else if (act.type==='market' && st.price!=null){ tween({p:st.price},{p:eq(st.sD,st.sS).p},SPEED.market,v=>{st.price=v.p;}); }
@@ -481,7 +519,9 @@ footer{color:var(--muted);font-size:.6rem}
     stop();
     const ch = L[ci], Q = ch.questions[qi];
     answered = false; tries = 0; lastAct = null;
-    applySetup(Q.setup); draw();
+    applySetup(Q.setup);
+    if (Q.act && Q.act.type==='reveal') st.reveal = false;   // 「価格と数量は？」の問題は、答えるまで「？」
+    draw();
     panel.innerHTML = head() + `
       <div class="card">
         <div class="eyebrow">問 ${qi+1} / ${ch.questions.length}</div>
@@ -525,13 +565,18 @@ footer{color:var(--muted);font-size:.6rem}
     if (canReplay) $('replay').addEventListener('click', replay);
     $('next').focus({preventScroll:true});
     before = snap(); lastAct = Q.act || null;
-    runAct(Q.act);
+    runAct(Q.act, nextAsksNumbers());
+  }
+
+  function nextAsksNumbers(){
+    const N = L[ci].questions[qi+1];
+    return !!(N && !N.setup && N.act && N.act.type==='reveal');
   }
 
   function replay(){
     if (!lastAct || !before) return;
     stop(); restore(before); draw();
-    setTimeout(() => runAct(lastAct), reduce ? 0 : 300);
+    setTimeout(() => runAct(lastAct, nextAsksNumbers()), reduce ? 0 : 300);
   }
 
   function next(){
