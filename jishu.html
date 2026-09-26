@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>需要と供給 自習プリント</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Dela+Gothic+One&display=swap">
+<style>
+:root{--ink:#1c2a2d;--muted:#56686b;--line:#b9c7c3;--demand:#1d67a8;--supply:#c84b17;--ans:#c0262d;--bg:#e9eeec;--paper:#fff}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;font-size:10.5pt;line-height:1.65;padding:0 16px}
+.bar{max-width:210mm;margin:16px auto;display:grid;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px}
+.bar .row{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.bar b{min-width:5.5em}
+.bar label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+.bar select{font:inherit;padding:2px 6px}
+.bar button{font:inherit;border:1px solid var(--line);background:#eef3f1;border-radius:6px;padding:6px 14px;cursor:pointer}
+.bar button.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.bar .note{color:var(--muted);font-size:12px}
+.sheet{max-width:210mm;margin:0 auto 24px;background:var(--paper);padding:14mm 14mm 16mm;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:6px;flex-wrap:wrap}
+.top h1{font-family:"Dela Gothic One","BIZ UDPGothic",sans-serif;font-weight:400;font-size:17pt;margin:0;line-height:1.25}
+.top .sub{font-size:9pt;color:var(--muted)}
+.name{display:flex;gap:10px;font-size:10pt;align-items:flex-end;flex-wrap:wrap}
+.name span{border-bottom:1px solid var(--ink);display:inline-block;min-width:3.2em;text-align:right;padding-right:2px}
+.name span.w{min-width:8em}
+.name .score{border:1.5px solid var(--ink);padding:2pt 6pt;border-bottom-width:1.5px;min-width:6em}
+.guide{font-size:9pt;color:var(--muted);margin:6pt 0 2pt}
+.unit{break-inside:avoid;border-bottom:1px dotted var(--line);padding:5pt 0}
+.q{display:grid;grid-template-columns:1fr auto;gap:3pt 12pt;padding:2pt 0}
+.q .qt{margin:0}
+.q .qt b{margin-right:5pt}
+.q .from{font-size:7.5pt;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 3px;margin-left:4pt;vertical-align:1px;white-space:nowrap}
+.q ol{list-style:none;margin:1pt 0 0;padding:0 0 0 1.4em;display:flex;flex-wrap:wrap;gap:0 14pt}
+.q ol li{white-space:nowrap}
+.q .box{grid-column:2;grid-row:1;align-self:start;white-space:nowrap;font-size:10pt}
+.q .box span{display:inline-block;min-width:2.8em;border:1px solid var(--ink);text-align:center;padding:1pt 4pt;margin-left:4pt;color:var(--ans);font-weight:700}
+.fig{display:flex;gap:10pt;align-items:center;padding-left:1.4em}
+.fig svg{width:56mm;height:auto;flex:none}
+.fig .how{font-size:9pt;color:var(--muted)}
+.inline-ans{padding-left:1.4em;color:var(--ans);font-size:9pt;margin:1pt 0 0}
+.answers{margin-top:10pt}
+.answers.newpage{break-before:page}
+.answers h2{font-size:13pt;margin:0 0 4pt;padding:2pt 8pt;background:#eef3f1;border-left:5px solid var(--ink)}
+.ans{display:grid;grid-template-columns:3.2em 1fr auto;grid-template-rows:auto 1fr;gap:0 8pt;padding:4pt 0;border-bottom:1px dotted var(--line);break-inside:avoid;align-items:start}
+.ans .n{font-weight:700}
+.ans .a{font-weight:700;color:var(--ans)}
+.ans .e{grid-column:2;font-size:9.5pt;margin:0}
+.ans svg{grid-column:3;grid-row:1 / span 2;width:40mm;height:auto}
+.memo{margin-top:10pt;break-inside:avoid}
+.memo .lab{font-size:9pt;font-weight:700}
+.lines{height:22mm;background:repeating-linear-gradient(to bottom,transparent 0,transparent 7mm,var(--line) 7mm,var(--line) 7.5mm)}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;padding:0}
+  .bar{display:none}
+  .sheet{box-shadow:none;margin:0;padding:0;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="row"><b>出題する章</b><span id="picks"></span></div>
+  <div class="row"><b>問題の数</b>
+    <select id="num"><option value="5">5問くらい</option><option value="10" selected>10問くらい</option><option value="15">15問くらい</option><option value="20">20問くらい</option><option value="999">選んだ章の全部</option></select>
+    <label><input type="radio" name="ord" value="rand" checked> ランダムな順</label>
+    <label><input type="radio" name="ord" value="seq"> 章の順</label>
+  </div>
+  <div class="row"><b>解答・解説</b>
+    <label><input type="radio" name="al" value="page" checked> 別のページ（切り離せる）</label>
+    <label><input type="radio" name="al" value="inline"> 問題のすぐ下</label>
+    <label><input type="radio" name="al" value="none"> 付けない</label>
+  </div>
+  <div class="row"><button id="regen">問題を作り直す</button><button class="primary" id="printBtn">印刷する</button>
+    <span class="note">「このとき〜」でつながる問題は、セットのまま出ます。プリント番号が同じなら、同じ問題が出ます。</span></div>
+</div>
+<div class="sheet" id="sheet"></div>
+
+<script src="lesson.js"></script>
+<script>
+(() => {
+  const L = window.LESSON || [];
+  const KANA = ['ア','イ','ウ','エ','オ','カ'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const $ = id => document.getElementById(id);
+
+  // 乱数（プリント番号から毎回同じ並びを作る）
+  const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const shuffle = (a, r) => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+  // 小さいグラフ（アプリと同じ計算）
+  const W=240, H=180, X0=28, X1=230, Y0=10, Y1=160;
+  const x = q => X0 + (X1-X0)*q/100, y = p => Y1 - (Y1-Y0)*p/100;
+  const Pd = (q,s) => 90 - 0.8*(q - s), Ps = (q,s) => 10 + 0.8*(q - s);
+  const eq = (sD,sS) => { const q = 50 + 0.5*(sD+sS); return {q, p: Pd(q,sD)}; };
+  let clipN = 0;
+  function mini(show, act, withAnswer){
+    const id = 'c' + (clipN++);
+    const seg = (f, s, color, dash) => `<line x1="${x(-20)}" y1="${y(f(-20,s))}" x2="${x(120)}" y2="${y(f(120,s))}" stroke="${color}" stroke-width="2" ${dash?`stroke-dasharray="${dash}"`:''} clip-path="url(#${id})"/>`;
+    let g = `<svg viewBox="0 0 ${W} ${H+14}" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="${id}"><rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}"/></clipPath></defs>`;
+    for (let i=25;i<=100;i+=25){ g += `<line x1="${X0}" x2="${X1}" y1="${y(i)}" y2="${y(i)}" stroke="#e3e9e7"/><line y1="${Y0}" y2="${Y1}" x1="${x(i)}" x2="${x(i)}" stroke="#e3e9e7"/>`; }
+    g += `<line x1="${X0}" y1="${Y0-4}" x2="${X0}" y2="${Y1}" stroke="#1c2a2d" stroke-width="1.2"/><line x1="${X0}" y1="${Y1}" x2="${X1+4}" y2="${Y1}" stroke="#1c2a2d" stroke-width="1.2"/>`;
+    g += `<text x="${X0-4}" y="${Y0+6}" font-size="9" text-anchor="end" fill="#56686b">価格</text><text x="${X1}" y="${Y1+13}" font-size="9" text-anchor="end" fill="#56686b">数量</text>`;
+    if (show.D){ g += seg(Pd,0,'#1d67a8'); g += `<text x="${x(88)}" y="${y(Pd(88,0))+14}" font-size="11" font-weight="700" fill="#1d67a8">D</text>`; }
+    if (show.S){ g += seg(Ps,0,'#c84b17'); g += `<text x="${x(86)}" y="${y(Ps(86,0))-5}" font-size="11" font-weight="700" fill="#c84b17">S</text>`; }
+    if (show.D && show.S){ const E=eq(0,0); g += `<circle cx="${x(E.q)}" cy="${y(E.p)}" r="3" fill="#1c2a2d"/><text x="${x(E.q)+5}" y="${y(E.p)-5}" font-size="9">E₀</text>`; }
+    if (withAnswer && act){
+      if (act.type==='shift'){
+        if (act.sD) g += seg(Pd,act.sD,'#c0262d','5 3');
+        if (act.sS) g += seg(Ps,act.sS,'#c0262d','5 3');
+        const E=eq(act.sD||0,act.sS||0); g += `<circle cx="${x(E.q)}" cy="${y(E.p)}" r="3" fill="#c0262d"/><text x="${x(E.q)+5}" y="${y(E.p)-5}" font-size="9" fill="#c0262d">E₁</text>`;
+      } else if (act.type==='control'){
+        g += `<line x1="${X0}" x2="${X1}" y1="${y(act.p)}" y2="${y(act.p)}" stroke="#c0262d" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+      } else if (act.type==='surplus'){
+        const E=eq(0,0);
+        g += `<polygon points="${x(0)},${y(Pd(0,0))} ${x(E.q)},${y(E.p)} ${x(0)},${y(E.p)}" fill="#1d67a8" fill-opacity=".25"/>`;
+        if (act.show!=='cs') g += `<polygon points="${x(0)},${y(Ps(0,0))} ${x(E.q)},${y(E.p)} ${x(0)},${y(E.p)}" fill="#c84b17" fill-opacity=".25"/>`;
+      }
+    }
+    return g + '</svg>';
+  }
+  const HOW = { shift:'動いたあとの曲線と、新しい交点を書き込もう', control:'決められた価格の線を書き込もう', surplus:'余剰の部分に色をぬろう' };
+  const hasFig = Q => Q.act && HOW[Q.act.type];
+
+  // 「このとき〜」でつながる問題をセットにする
+  const UNITS = [];
+  L.forEach((ch,ci) => ch.questions.forEach((Q,qi) => {
+    if (qi===0 || Q.setup) UNITS.push({ci, qs:[]});
+    UNITS[UNITS.length-1].qs.push(Q);
+  }));
+
+  let no = 0;
+  function build(){
+    const picked = [...document.querySelectorAll('#picks input')].filter(i=>i.checked).map(i=>+i.value);
+    const want = +$('num').value;
+    const ord = document.querySelector('input[name=ord]:checked').value;
+    const al = document.querySelector('input[name=al]:checked').value;
+    const r = rng(no);
+    clipN = 0;
+
+    let pool = UNITS.filter(u => picked.includes(u.ci));
+    let chosen = [], count = 0;
+    for (const u of shuffle(pool, r)){ if (count >= want) break; chosen.push(u); count += u.qs.length; }
+    if (ord==='seq') chosen.sort((a,b) => UNITS.indexOf(a) - UNITS.indexOf(b));
+    else chosen = shuffle(chosen, r);
+
+    const range = picked.length ? picked.map(i=>i+1).join('・') : '―';
+    let h = `<div class="top"><div><h1>需要と供給 自習プリント</h1>
+      <div class="sub">No.${no}　範囲：第${range}章　全${count}問</div></div>
+      <div class="name"><span>年</span><span>組</span><span>番</span>名前<span class="w"></span><span class="score">　　／${count}</span></div></div>
+      <p class="guide">正しいものを選んで、記号を「答え」に書きましょう。グラフがある問題は、グラフにも書き込もう。</p>`;
+    if (!chosen.length) h += '<p>出題する章を選んでください。</p>';
+
+    let n = 0; const key = [];
+    chosen.forEach(u => {
+      const ch = L[u.ci];
+      h += `<div class="unit">`;
+      u.qs.forEach((Q,k) => {
+        n++;
+        const CH = (Q.choices===SHIFT || Q.choices===PQ || Q.fixed) ? Q.choices.slice() : shuffle(Q.choices, r);
+        const ai = CH.indexOf(Q.a);
+        key.push({n, ch, ci:u.ci, Q, mark:KANA[ai], show:ch.show});
+        h += `<div class="q"><div><p class="qt"><b>問${n}</b>${esc(Q.q)}${k===0?`<span class="from">第${u.ci+1}章 ${esc(ch.title)}</span>`:''}</p>
+          <ol>${CH.map((c,i)=>`<li>${KANA[i]}　${esc(c)}</li>`).join('')}</ol></div>
+          <div class="box">答え<span>${al==='inline' ? KANA[ai] : '&nbsp;'}</span></div></div>`;
+        if (hasFig(Q)) h += `<div class="fig">${mini(ch.show, Q.act, al==='inline')}<span class="how">${HOW[Q.act.type]}</span></div>`;
+        if (al==='inline') h += `<p class="inline-ans">解説：${esc(Q.explain||'')}</p>`;
+      });
+      h += `</div>`;
+    });
+    h += `<div class="memo"><div class="lab">ふりかえり（まちがえた問題は、どこで迷った？）</div><div class="lines"></div></div>`;
+
+    if (al==='page' && key.length){
+      h += `<div class="answers newpage"><h2>解答・解説　No.${no}</h2>`;
+      key.forEach(k => {
+        h += `<div class="ans"><span class="n">問${k.n}</span><span><span class="a">${k.mark}</span>　${esc(k.Q.a)}</span>
+          ${hasFig(k.Q) ? mini(k.show, k.Q.act, true) : '<span></span>'}
+          <p class="e">${esc(k.Q.explain||'')}</p></div>`;
+      });
+      h += `</div>`;
+    }
+    $('sheet').innerHTML = h;
+  }
+
+  function newNo(){ no = 1000 + Math.floor(Math.random()*9000); build(); }
+
+  $('picks').innerHTML = L.map((ch,i) => `<label><input type="checkbox" value="${i}" ${ch.level?'':'checked'}>${i+1}${esc(ch.title)}</label>`).join(' ');
+  document.querySelectorAll('.bar input, .bar select').forEach(el => el.addEventListener('change', build));
+  $('regen').addEventListener('click', newNo);
+  $('printBtn').addEventListener('click', () => window.print());
+
+  const m = location.search.match(/no=(\d+)/);
+  if (location.search.includes('all')) document.querySelectorAll('#picks input').forEach(i => i.checked = true);
+  if (m){ no = +m[1]; build(); } else newNo();
+})();
+</script>
+</body>
+</html>

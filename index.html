@@ -59,6 +59,11 @@ button.primary:hover:not(:disabled){background:var(--ink);opacity:.88}
 .chapters .ck{color:var(--ok);font-weight:700;grid-row:span 2}
 .start{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
 .start .primary{font-size:1.1rem;padding:.6rem 1.4rem}
+.lvl{display:inline-block;font-size:.55rem;font-weight:700;letter-spacing:.06em;padding:0 .35rem;border-radius:.25rem;border:1px solid currentColor;color:var(--muted);margin-left:.3rem;vertical-align:.15em;line-height:1.5}
+.start a{text-decoration:none}
+.linkbtn{display:inline-block;font:inherit;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:.45rem;padding:.4rem .8rem}
+.linkbtn:hover{background:var(--btn-h)}
+.hintbox{background:var(--btn);border-radius:.4rem;padding:.4rem .6rem;font-size:.9rem}
 .howto{font-size:.7rem;color:var(--muted);border-top:1px solid var(--line);padding-top:.8rem;line-height:1.8}
 .howto kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:.25rem;padding:0 .3rem;background:var(--paper);color:var(--ink)}
 
@@ -73,6 +78,7 @@ nav button[aria-current="true"] .n{color:inherit;opacity:.7}
 nav .done{color:var(--ok);font-weight:700}
 nav button[aria-current="true"] .done{color:inherit}
 .size{font-size:.7rem;padding:.25rem .6rem}
+@media (max-width:700px){ nav{order:3;flex-basis:100%} .topbar{justify-content:space-between} }
 .main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:1rem;align-items:start}
 @media (max-width:900px){.main{grid-template-columns:1fr}}
 .board{background:var(--paper);border:1px solid var(--line);border-radius:.5rem;padding:.5rem}
@@ -124,10 +130,12 @@ footer{color:var(--muted);font-size:.6rem}
     <div class="start">
       <button class="primary" id="startBtn">1章からはじめる</button>
       <button id="freeBtn">自由実験</button>
+      <a class="linkbtn" href="worksheet.html" target="_blank" rel="noopener">ワークシート（印刷用）</a>
+      <a class="linkbtn" href="jishu.html" target="_blank" rel="noopener">自習プリント（問題・解答・解説）</a>
     </div>
     <div class="chapters" id="chapters"></div>
     <div class="howto">
-      先生向け：キーボードでも操作できます。<kbd>1</kbd>〜<kbd>4</kbd> 選択肢を選ぶ ／ <kbd>→</kbd> 次へ ／ <kbd>R</kbd> 動きをもう一度 ／ <kbd>Esc</kbd> トップへ。プレゼン用リモコンの「次へ」ボタンでも進められます。
+      先生向け：キーボードでも操作できます。<kbd>1</kbd>〜<kbd>4</kbd> 選択肢を選ぶ ／ <kbd>→</kbd> 次へ ／ <kbd>R</kbd> 動きをもう一度 ／ <kbd>Esc</kbd> トップへ。1回目に間違えるとヒントが出て、もう一度選べます。7・8章は政治・経済向けの発展です。プレゼン用リモコンの「次へ」ボタンでも進められます。
     </div>
   </section>
 
@@ -150,6 +158,9 @@ footer{color:var(--muted);font-size:.6rem}
           <g clip-path="url(#plot)">
             <line id="gD" stroke="var(--ghost)" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>
             <line id="gS" stroke="var(--ghost)" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>
+            <polygon id="csA" fill="var(--demand)" fill-opacity=".18"/>
+            <polygon id="psA" fill="var(--supply)" fill-opacity=".18"/>
+            <polygon id="dwlA" fill="var(--muted)" fill-opacity=".35"/>
             <g id="priceLayer">
               <line id="pLine" stroke="var(--ink)" stroke-width="2" stroke-dasharray="2 5" fill="none"/>
               <line id="gap" stroke-width="10" stroke-linecap="round" opacity=".35" fill="none"/>
@@ -169,6 +180,9 @@ footer{color:var(--muted);font-size:.6rem}
           <text id="e1t" font-size="20" font-weight="700" fill="var(--eq)">E</text>
           <text id="tD" font-size="24" font-weight="700" fill="var(--demand)">D 需要</text>
           <text id="tS" font-size="24" font-weight="700" fill="var(--supply)">S 供給</text>
+          <text id="csT" font-size="15" font-weight="700" fill="var(--demand)" text-anchor="middle">消費者余剰</text>
+          <text id="psT" font-size="15" font-weight="700" fill="var(--supply)" text-anchor="middle">生産者余剰</text>
+          <text id="dwlT" font-size="15" font-weight="700" fill="var(--ink)" text-anchor="start">死荷重</text>
           <text id="gapT" font-size="17" font-weight="700" text-anchor="middle"></text>
           <circle id="pD" r="6" fill="var(--demand)"/>
           <circle id="pS" r="6" fill="var(--supply)"/>
@@ -233,7 +247,8 @@ footer{color:var(--muted);font-size:.6rem}
   })();
 
   /* ---------- グラフの状態 ---------- */
-  const st = { sD:0, sS:0, show:{D:true,S:true}, showE:true, reveal:false, price:null, marker:null };
+  const st = { sD:0, sS:0, show:{D:true,S:true}, showE:true, reveal:false, price:null, marker:null, surplus:null, control:null };
+  const CLEAR = {sD:0,sS:0,reveal:false,price:null,marker:null,surplus:null,control:null};
 
   function change(d, unit){
     if (Math.abs(d) < 1) return '変わらない';
@@ -250,8 +265,8 @@ footer{color:var(--muted);font-size:.6rem}
     setLine($('gS'),-60,Ps(-60,0),160,Ps(160,0)); hide($('gS'),!show.S || Math.abs(sS)<=0.3);
 
     const aD=$('arrD'), aS=$('arrS');
-    if (show.D && Math.abs(sD)>3){ const p = sD>0 ? 76 : 34; setLine(aD, Qd(p,0)+Math.sign(sD)*2, p, Qd(p,sD)-Math.sign(sD)*3, p); hide(aD,false); } else hide(aD,true);
-    if (show.S && Math.abs(sS)>3){ const p = sS<0 ? 84 : 36; setLine(aS, Qs(p,0)+Math.sign(sS)*2, p, Qs(p,sS)-Math.sign(sS)*3, p); hide(aS,false); } else hide(aS,true);
+    if (show.D && !st.surplus && Math.abs(sD)>3){ const p = sD>0 ? 76 : 34; setLine(aD, Qd(p,0)+Math.sign(sD)*2, p, Qd(p,sD)-Math.sign(sD)*3, p); hide(aD,false); } else hide(aD,true);
+    if (show.S && !st.surplus && Math.abs(sS)>3){ const p = sS<0 ? 84 : 36; setLine(aS, Qs(p,0)+Math.sign(sS)*2, p, Qs(p,sS)-Math.sign(sS)*3, p); hide(aS,false); } else hide(aS,true);
 
     const qd = clamp(Qd(12,sD),6,82); $('tD').setAttribute('x',x(qd)+12); $('tD').setAttribute('y',y(Pd(qd,sD))+28);
     const qs = clamp(Qs(92,sS),6,90); $('tS').setAttribute('text-anchor','end'); $('tS').setAttribute('x',x(qs)-16); $('tS').setAttribute('y',y(Ps(qs,sS))-8);
@@ -294,10 +309,42 @@ footer{color:var(--muted);font-size:.6rem}
       gt.setAttribute('x', even ? x(E.q)+40 : clamp(x((a+b)/2), X0+130, X1-130));
       gt.setAttribute('y', even ? y(P)-12 : y(P) + (P>E.p ? -16 : 30));
       let col, txt;
-      if (even){ col='var(--ink)'; txt=`${yen(P)}円：ぴったり（均衡）`; }
-      else if (diff>0){ col='var(--supply)'; txt=`${yen(P)}円：売れ残り ${diff}個（超過供給）`; }
-      else { col='var(--demand)'; txt=`${yen(P)}円：品不足 ${-diff}個（超過需要）`; }
+      const pre = st.control==='ceiling' ? '上限' : st.control==='floor' ? '下限' : '';
+      if (even){ col='var(--ink)'; txt=`${pre}${yen(P)}円：ぴったり（均衡）`; }
+      else if (diff>0){ col='var(--supply)'; txt = pre ? `${pre}${yen(P)}円：売れ残り${diff}個` : `${yen(P)}円：売れ残り ${diff}個（超過供給）`; }
+      else { col='var(--demand)'; txt = pre ? `${pre}${yen(P)}円：品不足${-diff}個` : `${yen(P)}円：品不足 ${-diff}個（超過需要）`; }
       $('gap').setAttribute('stroke',col); gt.setAttribute('fill',col); gt.textContent=txt;
+    }
+
+    // 余剰
+    const sp = st.surplus && both;
+    ['csA','csT','psA','psT','dwlA','dwlT'].forEach(id => hide($(id), true));
+    if (sp){
+      const pts = a => a.map(([q,p]) => `${x(q)},${y(p)}`).join(' ');
+      const cen = (a,el) => { const q=a.reduce((t,v)=>t+v[0],0)/a.length, p=a.reduce((t,v)=>t+Math.min(v[1],100),0)/a.length;
+        el.setAttribute('x', clamp(x(q), X0+44, X1-50)); el.setAttribute('y', clamp(y(p)+6, Y0+18, Y1-8)); };
+      const d0 = Pd(0,sD), s0 = Ps(0,sS);
+      let cs, ps, dwl = null;
+      if (st.control && st.price!=null){
+        const Pc = st.price;
+        if (st.control==='ceiling'){
+          const Qt = Qs(Pc,sS);
+          cs = [[0,d0],[Qt,Pd(Qt,sD)],[Qt,Pc],[0,Pc]]; ps = [[0,s0],[Qt,Pc],[0,Pc]];
+          dwl = [[Qt,Pd(Qt,sD)],[E.q,E.p],[Qt,Pc]];
+        } else {
+          const Qt = Qd(Pc,sD);
+          cs = [[0,d0],[Qt,Pc],[0,Pc]]; ps = [[0,s0],[Qt,Ps(Qt,sS)],[Qt,Pc],[0,Pc]];
+          dwl = [[Qt,Pc],[E.q,E.p],[Qt,Ps(Qt,sS)]];
+        }
+      } else {
+        cs = [[0,d0],[E.q,E.p],[0,E.p]]; ps = [[0,s0],[E.q,E.p],[0,E.p]];
+      }
+      $('csA').setAttribute('points',pts(cs)); cen(cs,$('csT')); hide($('csA'),false); hide($('csT'),false);
+      if (st.surplus!=='cs'){ $('psA').setAttribute('points',pts(ps)); cen(ps,$('psT')); hide($('psA'),false); hide($('psT'),false); }
+      if (st.surplus==='dwl' && dwl){
+        $('dwlA').setAttribute('points',pts(dwl)); hide($('dwlA'),false); hide($('dwlT'),false);
+        $('dwlT').setAttribute('x', x(E.q)+14); $('dwlT').setAttribute('y', y(E.p)+ (st.control==='floor' ? -8 : 22));
+      }
     }
 
     // 曲線上の点
@@ -343,6 +390,16 @@ footer{color:var(--muted);font-size:.6rem}
     else if (act.type==='along' && st.marker){ tween({p:st.marker.p},{p:act.to},SPEED.along,v=>{st.marker.p=v.p;}); }
     else if (act.type==='market' && st.price!=null){ tween({p:st.price},{p:eq(st.sD,st.sS).p},SPEED.market,v=>{st.price=v.p;}); }
     else if (act.type==='reveal'){ st.showE=true; st.reveal=true; draw(); }
+    else if (act.type==='surplus'){ st.surplus = act.show || 'both'; draw(); }
+    else if (act.type==='control'){
+      st.control = act.kind; st.price = eq(st.sD,st.sS).p;
+      tween({p:st.price},{p:act.p},SPEED.along,v=>{st.price=v.p;}, () => { if (act.dwl){ st.surplus='dwl'; draw(); } });
+    }
+    else if (act.type==='bounce' && st.price!=null){
+      const P = st.price, target = P + (eq(st.sD,st.sS).p - P)*0.6;
+      tween({p:P},{p:target},900,v=>{st.price=v.p;}, () =>
+        setTimeout(() => tween({p:st.price},{p:P},500,v=>{st.price=v.p;}), 150));
+    }
   }
   const snap = () => JSON.parse(JSON.stringify(st));
   const restore = s => Object.assign(st, JSON.parse(JSON.stringify(s)));
@@ -351,7 +408,7 @@ footer{color:var(--muted);font-size:.6rem}
   const L = window.LESSON || [];
   const FREE = L.length;             // 最後のタブ＝自由実験
   const done = new Set();
-  let view = 'home', ci = 0, qi = 0, score = 0, answered = false, before = null, lastAct = null;
+  let view = 'home', ci = 0, qi = 0, score = 0, score2 = 0, tries = 0, answered = false, before = null, lastAct = null;
   const panel = $('panel');
 
   function goHome(){
@@ -364,7 +421,7 @@ footer{color:var(--muted);font-size:.6rem}
     const box = $('chapters'); box.innerHTML = '';
     L.forEach((ch,i) => {
       const b = document.createElement('button');
-      b.innerHTML = `<span class="num">${i+1}</span><span class="t">${esc(ch.title)}</span>
+      b.innerHTML = `<span class="num">${i+1}</span><span class="t">${esc(ch.title)}${ch.level ? `<span class="lvl">${esc(ch.level)}</span>` : ''}</span>
         <span class="ck">${done.has(i)?'✓':''}</span><span class="d">${esc(ch.intro)}</span>`;
       b.addEventListener('click', () => openChapter(i));
       box.appendChild(b);
@@ -397,33 +454,33 @@ footer{color:var(--muted);font-size:.6rem}
   }
 
   function openChapter(i){
-    stop(); ci=i; qi=0; score=0; view='lesson';
+    stop(); ci=i; qi=0; score=0; score2=0; view='lesson';
     $('home').hidden = true; $('lesson').hidden = false;
     renderTabs(); window.scrollTo(0,0);
     if (i===FREE) return openFree();
     const ch = L[i];
     st.show = {D:!!ch.show.D, S:!!ch.show.S};
     st.showE = !!ch.show.E;
-    Object.assign(st,{sD:0,sS:0,reveal:false,price:null,marker:null});
+    Object.assign(st,CLEAR);
     showQuestion();
   }
 
   function applySetup(s){
     if (!s) return;
-    if (s.reset){ Object.assign(st,{sD:0,sS:0,reveal:false,price:null,marker:null}); st.showE = !!L[ci].show.E; }
+    if (s.reset){ Object.assign(st,CLEAR); st.showE = !!L[ci].show.E; }
     if (s.price!=null) st.price = s.price;
     if (s.marker) st.marker = {curve:s.marker.curve, p:s.marker.p};
   }
 
   function head(){
     const ch = L[ci];
-    return `<div><div class="eyebrow">第${ci+1}章</div><h2>${esc(ch.title)}</h2><p class="intro">${esc(ch.intro)}</p></div>`;
+    return `<div><div class="eyebrow">第${ci+1}章${ch.level ? `<span class="lvl">${esc(ch.level)}</span>` : ''}</div><h2>${esc(ch.title)}</h2><p class="intro">${esc(ch.intro)}</p></div>`;
   }
 
   function showQuestion(){
     stop();
     const ch = L[ci], Q = ch.questions[qi];
-    answered = false; lastAct = null;
+    answered = false; tries = 0; lastAct = null;
     applySetup(Q.setup); draw();
     panel.innerHTML = head() + `
       <div class="card">
@@ -433,7 +490,7 @@ footer{color:var(--muted);font-size:.6rem}
         <div class="fb" id="fb" hidden></div>
       </div>`;
     const box = $('choices');
-    Q.choices.forEach((c,i) => {
+    (window.choiceOrder ? window.choiceOrder(Q) : Q.choices).forEach((c,i) => {
       const b = document.createElement('button');
       b.dataset.v = c;
       b.innerHTML = `<span class="k">${i+1}</span><span>${esc(c)}</span>`;
@@ -443,15 +500,25 @@ footer{color:var(--muted);font-size:.6rem}
   }
 
   function answer(btn, choice){
-    if (answered) return; answered = true;
+    if (answered || btn.disabled) return;
     const ch = L[ci], Q = ch.questions[qi], right = choice===Q.a;
-    if (right) score++;
+    // 1回目で間違えたら、ヒントを出してもう一度
+    if (!right && tries===0 && Q.choices.length>2){
+      tries = 1;
+      btn.disabled = true; btn.classList.add('ng');
+      const fb = $('fb'); fb.hidden = false;
+      fb.innerHTML = `<div class="verdict ng">おしい！もう一度選んでみよう</div>
+        <p class="hintbox">ヒント：${esc(Q.hint || 'もう一度グラフを見て考えてみよう。')}</p>`;
+      return;
+    }
+    answered = true;
+    if (right){ if (tries===0) score++; else score2++; }
     [...$('choices').children].forEach(b => { b.disabled = true; if (b.dataset.v===Q.a) b.classList.add('ok'); });
     if (!right) btn.classList.add('ng');
     const last = qi === ch.questions.length-1;
     const canReplay = Q.act && Q.act.type!=='reveal';
     const fb = $('fb'); fb.hidden = false;
-    fb.innerHTML = `<div class="verdict ${right?'ok':'ng'}">${right ? '正解！' : '残念、正解は「'+esc(Q.a)+'」'}</div>
+    fb.innerHTML = `<div class="verdict ${right?'ok':'ng'}">${right ? (tries ? 'ヒントで正解！' : '正解！') : '残念、正解は「'+esc(Q.a)+'」'}</div>
       <p>${esc(Q.explain||'')}</p>
       <div class="row">${canReplay ? '<button id="replay">↻ 動きをもう一度</button>' : ''}<button class="primary" id="next">${last ? 'まとめへ' : '次の問題 →'}</button></div>`;
     $('next').addEventListener('click', next);
@@ -479,7 +546,7 @@ footer{color:var(--muted);font-size:.6rem}
     panel.innerHTML = head() + `
       <div class="card">
         <div class="eyebrow">まとめ</div>
-        <div class="score">${n}問中 ${score}問 正解</div>
+        <div class="score">${n}問中 ${score}問 正解${score2 ? `<span style="font-size:.9rem;font-weight:400"> ＋ヒントで ${score2}問</span>` : ''}</div>
         <p style="margin:0">${esc(ch.wrap||'')}</p>
         <div class="row">
           <button id="again">もう一度</button>
@@ -500,7 +567,7 @@ footer{color:var(--muted);font-size:.6rem}
     if (view!=='lesson' || ci===FREE) return;
     const box = $('choices');
     if (!answered && box && /^[1-9]$/.test(e.key)){
-      const b = box.children[+e.key-1]; if (b){ b.click(); e.preventDefault(); } return;
+      const b = box.children[+e.key-1]; if (b && !b.disabled){ b.click(); e.preventDefault(); } return;
     }
     if (['ArrowRight','PageDown'].includes(e.key)){
       const g = $('go'), n = $('next');
@@ -512,7 +579,7 @@ footer{color:var(--muted);font-size:.6rem}
 
   /* ---------- 自由実験 ---------- */
   function openFree(){
-    Object.assign(st,{sD:0,sS:0,show:{D:true,S:true},showE:true,reveal:true,price:null,marker:null});
+    Object.assign(st,CLEAR,{show:{D:true,S:true},showE:true,reveal:true});
     draw();
     panel.innerHTML = `
       <div><div class="eyebrow">おまけ</div><h2>自由実験</h2><p class="intro">曲線や価格を自由に動かして、何が起きるか確かめてみましょう。</p></div>
